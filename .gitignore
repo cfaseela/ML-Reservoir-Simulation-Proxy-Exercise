@@ -1,0 +1,65 @@
+# ── Python environments ───────────────────────────────────────────────
+.venv/
+venv/
+xmgn-env/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# ── Eclipse / simulation binary outputs (huge — ship out-of-band) ──────
+*.UNRST
+*.UNSMRY
+*.SMSPEC
+*.EGRID
+*.INIT
+*.GRID
+*.X[0-9][0-9][0-9][0-9]
+*.S[0-9][0-9][0-9][0-9]
+*.PRT
+*.DBG
+*.dbprtx
+*.RSSPEC
+*.INSPEC
+*.MSG
+*.LOG
+*.ECLRUN
+*.ECLEND
+*.RFT
+*.h5
+
+# ── Preprocessed graph datasets (tens of GB) ──────────────────────────
+*.dataset/
+**/graphs/
+**/partitions/
+*.pt
+
+# ── Generated LHS case folders + per-run logs ─────────────────────────
+dataset/NORNE_LHS/
+dataset/*/cases/
+**/run_status.csv
+*.log
+
+# ── xmgn training outputs (checkpoints, mlruns) ───────────────────────
+xmgn/outputs/
+**/best_checkpoints/
+**/checkpoints/
+mlruns/
+
+# ── OS / editor noise ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ── Keep: the Norne base deck IS source-of-truth, but its big binary
+#    results are excluded by the patterns above. The .DATA + INCLUDE/*.INC
+#    text files are tracked.
+!norne_base/**/*.DATA
+!norne_base/**/*.INC
+!norne_base/**/*.GRDECL
+!norne_base/**/*.prop
+
+# Pre-existing, not part of the assessment package
+student_sample_model/
+dataset/
+opm-data-temp/

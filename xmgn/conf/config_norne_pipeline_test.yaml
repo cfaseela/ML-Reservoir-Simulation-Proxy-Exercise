@@ -1,0 +1,78 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023 - 2026 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Pipeline-test config: train xmgn on the first 60 completed Norne LHS cases
+# WHILE the remaining 440 are still being simulated. Goal is to validate the
+# end-to-end pipeline and produce a reference checkpoint, NOT a generalizable
+# surrogate (60 cases is too few for that).
+
+hydra:
+  job:
+    chdir: true
+    name: XMGN_Norne_PipelineTest_60
+  run:
+    dir: ./outputs/${hydra:job.name}
+
+runspec:
+  job_name: ${hydra:job.name}
+  description: "Pipeline validation with 60 Norne LHS cases (while batch in progress)"
+
+dataset:
+  simulator: ECLIPSE                            # Schlumberger Eclipse (not OPM); both produce ECLIPSE-format output
+  sim_dir: /root/NORNE/completed                # Copied to Linux-native ext4 for ~5-10x faster training I/O than /mnt/d 9p mount
+
+  graph:
+    node_features:
+      static: ["PERMX", "PORV", "X", "Y", "Z"]
+      dynamic:
+        variables: ["PRESSURE", "SWAT", "WCID"]
+        prev_timesteps: 2                       # current + 2 prior timesteps as input window (we have 65 per case — plenty)
+
+    edge_features: ["TRANX", "TRANY", "TRANZ", "TRANNNC"]   # Norne has many NNCs from faults — TRANNNC is important here
+
+    global_features:
+      delta_t: true
+      time: true
+
+    target_vars:
+      node_features: ["PRESSURE", "SWAT"]       # Matching the canonical Norne setup (2 targets, not 3-phase)
+      weights: [1.0, 1.0]
+      loss_functions: ["L2", "L1"]
+
+    nonlinear_scaling: ["PERMX:LOG10", "TRAN:LOG10"]
+
+preprocessing:
+  skip_graphs: false                            # Build graphs from scratch in Linux
+  num_partitions: 3                             # Norne default (Linux PyG ClusterData works; no segfault)
+  halo_size: 5                                  # Norne default
+  num_preprocess_workers: 4
+  data_split:
+    train_ratio: 0.8                            # ~48 cases train
+    val_ratio: 0.1                              # ~6 cases val
+    test_ratio: 0.1                             # ~6 cases test
+
+model:
+  num_message_passing_layers: 5                 # Default Norne depth — fits within GTX 1080 8 GB
+  hidden_dim: 128
+  activation: silu
+
+training:
+  num_epochs: 200                               # Reduced from 1000 — pipeline test, not full convergence
+  batch_size: 1                                 # GNN constraint in xmgn
+  start_lr: 1e-3
+  end_lr: 1e-6
+  weight_decay: 1e-3
+  validation_freq: 5
+  resume: false
+  early_stopping:
+    patience: 20
+    min_delta: 1e-6
+
+performance:
+  use_concat_trick: true
+  checkpoint_segments: 2
+  enable_cudnn_benchmark: true
+
+inference:
+  checkpoint_path: null
+  model_path: null

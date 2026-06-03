@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: Apache-2.0
+# Evaluation config: run the epoch-60-trained model on the 440 UNSEEN cases
+# (NORNE_061..NORNE_500) that were never part of the 60-case training run.
+#
+# CRITICAL: this preprocesses the eval cases into graphs, but the model must be
+# normalized with the TRAINING statistics, not eval-set statistics. The watcher
+# overwrites this dataset's global_stats.json with the training one before
+# inference (see tools/eval_watcher.sh). Model architecture MUST match training.
+
+hydra:
+  job:
+    chdir: true
+    name: XMGN_Norne_Eval440
+  run:
+    dir: ./outputs/${hydra:job.name}
+
+runspec:
+  job_name: ${hydra:job.name}
+  description: "Out-of-sample evaluation on 440 unseen Norne cases"
+
+dataset:
+  simulator: ECLIPSE
+  sim_dir: /mnt/d/NORNE/eval                     # flat hard-linked view of cases 061-500
+
+  graph:
+    node_features:
+      static: ["PERMX", "PORV", "X", "Y", "Z"]
+      dynamic:
+        variables: ["PRESSURE", "SWAT", "WCID"]
+        prev_timesteps: 2
+    edge_features: ["TRANX", "TRANY", "TRANZ", "TRANNNC"]
+    global_features:
+      delta_t: true
+      time: true
+    target_vars:
+      node_features: ["PRESSURE", "SWAT"]
+      weights: [1.0, 1.0]
+      loss_functions: ["L2", "L1"]
+    nonlinear_scaling: ["PERMX:LOG10", "TRAN:LOG10"]
+
+preprocessing:
+  # graphs already built — re-run after disk-full failure only redoes
+  # partitions + organize + stats. flip to false to rebuild graphs.
+  skip_graphs: true
+  num_partitions: 3                              # must match training
+  halo_size: 5                                   # must match training
+  num_preprocess_workers: 4
+  data_split:
+    train_ratio: 0.01                            # ~4 cases (ignored by inference)
+    val_ratio: 0.01                              # ~4 cases (ignored)
+    test_ratio: 0.98                             # ~432 cases — what inference evaluates
+
+# MUST match the trained model architecture exactly (else checkpoint won't load)
+model:
+  num_message_passing_layers: 5
+  hidden_dim: 128
+  activation: silu
+
+training:
+  num_epochs: 200
+  batch_size: 1
+  start_lr: 1e-3
+  end_lr: 1e-6
+  weight_decay: 1e-3
+  validation_freq: 5
+  resume: false
+  early_stopping:
+    patience: 20
+    min_delta: 1e-6
+
+performance:
+  use_concat_trick: true
+  checkpoint_segments: 2
+  enable_cudnn_benchmark: true
+
+inference:
+  # Set by the watcher via Hydra override to the training run's best checkpoint:
+  #   inference.model_path=/mnt/e/.../XMGN_Norne_PipelineTest_60/best_checkpoints/MeshGraphNet.0.<N>.mdlus
+  checkpoint_path: null
+  model_path: null
