@@ -1,0 +1,9 @@
+artifact_location: file:///home/vlab_/ML-Reservoir-Simulation-Proxy-Exercise/xmgn/outputs/XMGN_Norne_Full_60/mlruns/147846582729322094
+creation_time: 1781001042492
+effective_trace_archival_retention: null
+experiment_id: '147846582729322094'
+last_update_time: 1781001042492
+lifecycle_stage: active
+name: XMGN_Norne_Full_60
+trace_location: null
+workspace: default

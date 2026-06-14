@@ -30,11 +30,10 @@ from matplotlib.colors import TwoSlopeNorm
 from resdata.resfile import ResdataFile
 from resdata.resfile import ResdataFile  # type: ignore
 
-CASES_JSON = "/mnt/e/NVIDIA/reservoir_simulation/eval_results/representative_cases.json"
-TRUTH_BASE = "/mnt/e/NORNE/cases"
-PRED_BASE = "/mnt/e/NVIDIA/reservoir_simulation/eval_results/predictions_unrst"
-OUT_PNG = "/mnt/e/NVIDIA/reservoir_simulation/eval_results/final_timestep_matrix.png"
-
+CASES_JSON = "/home/vlab_/ML-Reservoir-Simulation-Proxy-Exercise/xmgn/outputs/XMGN_Norne_Full_60/representative_cases.json"
+TRUTH_BASE = "/home/vlab_/data/NORNE_raw"
+PRED_BASE = "/home/vlab_/ML-Reservoir-Simulation-Proxy-Exercise/xmgn/outputs/XMGN_Norne_Full_60/pred_unrst"
+OUT_PNG = "/home/vlab_/ML-Reservoir-Simulation-Proxy-Exercise/xmgn/outputs/XMGN_Norne_Full_60/final_timestep_matrix.png"
 
 def load_grid_dims(egrid_path):
     """Read nx, ny, nz from an EGRID via the FILEHEAD keyword."""
@@ -135,7 +134,7 @@ def main():
     rows = []
     for case in cases:
         truth_unrst = os.path.join(TRUTH_BASE, case, f"{case}.UNRST")
-        pred_unrst = os.path.join(PRED_BASE, f"{case}.UNRST")
+        pred_unrst = os.path.join(PRED_BASE, f"{case}_PRED.UNRST")
         init_path = os.path.join(TRUTH_BASE, case, f"{case}.INIT")
         egrid_path = os.path.join(TRUTH_BASE, case, f"{case}.EGRID")
 

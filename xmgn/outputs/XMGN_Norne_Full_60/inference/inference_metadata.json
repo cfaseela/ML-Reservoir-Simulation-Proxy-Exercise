@@ -1,0 +1,16 @@
+{
+  "hdf5_files": [
+    "NORNE_002.hdf5",
+    "NORNE_008.hdf5",
+    "NORNE_016.hdf5",
+    "NORNE_018.hdf5",
+    "NORNE_041.hdf5",
+    "NORNE_048.hdf5"
+  ],
+  "num_cases": 6,
+  "target_variables": [
+    "PRESSURE",
+    "SWAT"
+  ],
+  "created_at": "2026-06-10T10:35:57.655448+00:00"
+}

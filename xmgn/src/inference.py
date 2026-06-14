@@ -575,13 +575,22 @@ class InferenceRunner:
                 )
                 perm = None
             if perm is not None:
+                # FIX (patch #7 bug): the rollout stores predictions[ts] as a
+                # list of per-partition inner-node chunks. The original reorder
+                # applied the full-grid permutation to EACH chunk separately,
+                # causing a shape mismatch (chunk ~14,941 vs grid 44,431).
+                # Concatenate the chunks into the full grid vector first, then
+                # reorder once. Re-wrapped as a one-element list so the HDF5
+                # saver (which np.concatenates) is unaffected.
                 for ts, vec_list in case_results[case_name]["predictions"].items():
+                    full = np.concatenate(vec_list, axis=0)
                     case_results[case_name]["predictions"][ts] = [
-                        self._reorder_to_natural(arr, perm) for arr in vec_list
+                        self._reorder_to_natural(full, perm)
                     ]
                 for ts, vec_list in case_results[case_name]["targets"].items():
+                    full = np.concatenate(vec_list, axis=0)
                     case_results[case_name]["targets"][ts] = [
-                        self._reorder_to_natural(arr, perm) for arr in vec_list
+                        self._reorder_to_natural(full, perm)
                     ]
 
             # Save THIS case's HDF5 immediately, then free its in-memory data
